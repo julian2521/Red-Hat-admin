@@ -38,13 +38,17 @@ cat<<EOF > setUp.sh
   firewall-cmd –-add--service=http –permanent
   firewall-cmd –-add--service=https –permanent
   firewall-cmd --reload
+  echo Apache is up, please use hostname to curl each team's index page ex:"curl $1.cts4348.fiu.edu"
 EOF
 
 echo "127.0.0.1 $1.cts4348.fiu.edu" >> /etc/hosts   
 mkdir /var/www/$1
 echo "$1" > /var/www/$1/index.html
+FILE=/etc/httpd/conf.d/$1.conf
 
-
+if ! [ -f "$FILE" ]; then
+ bash setUp.sh $1
+fi
 }
 
 #Now we must grep according to two filters, one for females and one for males.
