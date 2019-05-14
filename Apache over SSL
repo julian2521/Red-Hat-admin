@@ -1,0 +1,55 @@
+#This funtion will create teams from a csv file that has several fields, using apache on port 443. 
+
+Virtualhost(){
+
+cat <<EOF > /etc/httpd/conf.d/$1.conf
+
+<VirtualHost *:443>
+    ServerAdmin $1.cts4348.fiu.edu
+    ServerName $1.cts4348.fiu.edu
+    ServerAlias example.com
+
+    DocumentRoot /var/www/$1
+
+    SSLEngine on
+    SSLCertificateFile /etc/pki/tls/certs/localhost.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
+</VirtualHost>
+
+<Directory /var/www/$1/>
+Options Indexes FollowSymLinks
+AllowOverride ALL
+Order allow,deny
+Allow from all 
+</Directory>
+EOF
+
+cat<<EOF > setUp.sh
+  #!/bin/bash
+  #Apache Install
+  yum install httpd -y
+  systemctl start httpd
+  systemctl enable httpd
+  #firewall updates
+  yum install net-tools -y 
+   sudo yum install mod_ssl 
+  firewall-cmd –-add-port=443/tcp -–permanent
+  firewall-cmd –-add-port=80/tcp -–permanent
+  firewall-cmd –-add--service=http –permanent
+  firewall-cmd –-add--service=https –permanent
+  firewall-cmd --reload
+EOF
+
+echo "127.0.0.1 $1.cts4348.fiu.edu" >> /etc/hosts   
+mkdir /var/www/$1
+echo "$1" > /var/www/$1/index.html
+
+
+}
+
+#Now we must grep according to two filters, one for females and one for males.
+	#Centos	male
+	    cat csv | grep ',m,' | cut -d, -f6 | sort -u | while read line; do Virtualhost $line; done
+    
+	#Fedora	female
+		cat csv | grep ',f,' | cut -d, -f6 | sort -u | while read line; do Virtualhost $line; done
